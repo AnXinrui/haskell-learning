@@ -59,10 +59,16 @@ elab _ _ = error "only lambdas can be recursive "
 
 -- e = Let (Val "x" $ (Number 10)) (Minus (Number 22) (Var "x"))
 {-
-e = Let (Rec "sum" (Lam ["n"] (If (Equals (Var "n") (Number 0)) (Number 0) (Plus (Var "n") (Apply (Var "sum") [Minus (Var "n") (Number 1)]))))) (Apply (Var "sum") (Number 3))
+e = Let (Rec "sum" (Lam ["n"] (If (Equals (Var "n") (Number 0)) (Number 0) (Plus (Var "n") (Apply (Var "sum") [Minus (Var "n") (Number 1)]))))) (Apply (Var "sum") [Number 3])
 
 -}
 
 {-
-
+  x = 3
+  elab
+  env0 = (["sum", Closure ["n"] If.. env0)]
+  eval((Apply (Var "sum") (Number 3)) env 0 -> apply Closure ["n"] If.. env0  (Number 3)
+    -> eval If.. (zip ids vals ++ env)
+  (Apply (Var "sum") [Minus (Var "n") (Number 1)])
+  eval "sum" 
 -}
