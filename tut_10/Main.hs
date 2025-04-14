@@ -27,6 +27,7 @@ data Expr = Number Int
           | Let Defn Expr 
           | Lam [Ident] Expr 
           | Apply Expr [Expr] -- fib 10 :: Apply (Lam ["n"] ...) [Number 10]
+          | While Expr Expr  -- While condition body
           deriving (Show, Eq)
 
 data Value = NumVal Int | BoolVal Bool | Closure [Ident] Expr Env
@@ -106,6 +107,31 @@ fibExpr =
     )
     (Apply (Var "fib") [Number 5])
 
-main = print $ eval fibExpr []
+f = Let
+    (Rec "fib"
+      (Lam ["n"]
+        (If (Equals (Var "n") (Number 0))
+            (Number 0)
+            (If (Equals (Var "n") (Number 1))
+                (Number 1)
+                (Plus
+                  (Apply (Var "fib") [Minus (Var "n") (Number 1)])
+                  (Apply (Var "fib") [Minus (Var "n") (Number 2)])
+                )
+            )
+        )
+      )
+    )
+e = (Let (Val "n" (Number 10)) (Var "n"))
 
-  
+env = []
+main = do
+  print $ eval e env
+  print $ eval (Apply (Var "fib") [Number 5]) env
+  -- print $ eval e env
+  -- print (env :: Env)
+  -- print $ eval (Apply (Var "fib") [Number 5]) []
+
+  -- f = Let (Rec "fib" (Lam ["n"] (If (Equals (Var "n") (Number 0)) (Number 0) (If (Equals (Var "n") (Number 1)) (Number 1) (Plus (Apply (Var "fib") [Minus (Var "n") (Number 1)]) (Apply (Var "fib") [Minus (Var "n") (Number 2)]))))))
+
+  -- eval (f (Apply (Var "fib") [Number 5])) []
