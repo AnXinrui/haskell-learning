@@ -126,7 +126,7 @@ e = (Let (Val "n" (Number 10)) (Var "n"))
 
 env = []
 main = do
-  print $ eval e env
+  print $ eval e env 
   print $ eval (Apply (Var "fib") [Number 5]) env
   -- print $ eval e env
   -- print (env :: Env)
