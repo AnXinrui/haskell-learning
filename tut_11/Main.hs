@@ -69,7 +69,7 @@ data Defn = Val Ident Expr
 
 type Env = [(Ident, Value)]
 
-eval :: Expr -> Env -> M Value
+eval :: Expr -> Env -> M Value              -- State [Int] Value
 eval (Number i) env = return $ NumVal i 
 eval (Boolean b) env = return $ BoolVal b
 eval (Plus e1 e2) env = do
@@ -93,25 +93,29 @@ eval (Apply f xs) env = do
   f' <- eval f env 
   xs' <- mapM (flip eval env) xs
   apply f' xs'
-eval (New    ) env = do { mem <- get;
-                          let ret = length mem;
-                          set $ mem ++ [Null];
-                          return $ MemAddr ret
-                        }
+
+eval (New) env = do
+  mem <- get
+  let ret = length mem
+  set $ mem ++ [Null]
+  return $ MemAddr ret
 
 
-eval (Deref e) env = do { ~(MemAddr i) <- eval e env;
-                          mem <- get;
-                          return $ meme !! i 
-                        }
+eval (Deref e) env = do 
+  ~(MemAddr i) <- eval e env
+  mem <- get
+  return $ mem !! i 
                   
-eval (Seq e1 e2)    env = eval e1 env >>= eval e2 env 
+eval (Seq e1 e2)    env = eval e1 env >> eval e2 env 
 
-eval (Assign e1 e2) env = do { ~(MemAddr i) <- eval e1 env;
-                               e2' <- eval e2 env;
-                               mem <- get;
-                               let mem' = take i ++ [e2'] ++ drop i mem 
-                             } 
+eval (Assign e1 e2) env = do  
+  ~(MemAddr i) <- eval e1 env
+  e2' <- eval e2 env
+  mem <- get
+  let mem' = take i mem ++ [e2'] ++ drop i mem
+  set mem'
+  return Null
+                             
 
 apply :: Value -> [Value] -> M Value
 apply (Closure ids e env) vals = eval e (zip ids vals ++ env)
@@ -179,7 +183,9 @@ runState M []
 -}
 
 env = []
-main = print "hello world"
+main = do 
+  print "hello world"
+  -- runTest 
   -- print $ eval e env 
   -- print $ eval (Apply (Var "fib") [Number 5]) env
   -- print $ eval e env
@@ -189,3 +195,8 @@ main = print "hello world"
   -- f = Let (Rec "fib" (Lam ["n"] (If (Equals (Var "n") (Number 0)) (Number 0) (If (Equals (Var "n") (Number 1)) (Number 1) (Plus (Apply (Var "fib") [Minus (Var "n") (Number 1)]) (Apply (Var "fib") [Minus (Var "n") (Number 2)]))))))
 
   -- eval (f (Apply (Var "fib") [Number 5])) []
+
+
+let e = Let ((Val "x") New) (Seq (Assign (Var "x") (Number 42)) (Assign (Var "x") (Plus (Deref (Var "x")) (Number 1))))
+-- runTest :: IO()
+-- runTest = do 
