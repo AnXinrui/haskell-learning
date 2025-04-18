@@ -73,10 +73,5 @@ str2Int :: Int -> String -> Int
 str2Int acc       [] = acc 
 str2Int acc (x : xs) = str2Int (acc * 10 + (digitToInt x)) xs
 
-
-
-
-
-
 main :: IO() 
 main = putStrLn "Hello Haskell!"
