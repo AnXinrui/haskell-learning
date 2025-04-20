@@ -7,27 +7,38 @@ import Control.Monad.State
 
 
 eval :: Expr -> Env -> State [Mem] Value
-eval (Number n)  _ = return $ NumVal n 
-eval (Boolean b) _ = return $ BoolVal b 
-eval (Expr' e) env = evalExpr' e env
-eval (Var v) _ = undefined
+eval (Number n)    _ = return $ NumVal n 
+eval (Boolean b)   _ = return $ BoolVal b 
 
-
--- 计算 Expr' 类型的表达式
-evalExpr' :: Expr' -> Env -> State [Mem] Value
-evalExpr' (Add e1 e2) env = do
-  v1 <- evalExpr' e1 env
-  v2 <- evalExpr' e2 env
+eval (TermExpr t)  _ = return $ NumVal $ evalTerm t
+eval (Add e1 e2) env = do 
+  v1 <- eval e1 env
+  v2 <- eval e2 env
   case (v1, v2) of
     (NumVal n1, NumVal n2) -> return $ NumVal (n1 + n2)
     _ -> error "Type error in Add: expected NumVal"
-
-evalExpr' (Sub e1 e2) env = do
-  v1 <- evalExpr' e1 env
-  v2 <- evalExpr' e2 env
+eval (Sub e1 e2) env = do 
+  v1 <- eval e1 env
+  v2 <- eval e2 env
   case (v1, v2) of
     (NumVal n1, NumVal n2) -> return $ NumVal (n1 - n2)
-    _ -> error "Type error in Sub: expected NumVal"
+    _ -> error "Type error in Add: expected NumVal"
+
+eval (Var v) _     = undefined
+
+evalTerm :: Term -> Int
+evalTerm (FactorTerm f) = evalFactor f
+evalTerm (Mult t1 t2)   = evalTerm t1 * evalTerm t2
+evalTerm (Div t1 t2)    = evalTerm t1 `div` evalTerm t2
+
+evalFactor :: Factor -> Int
+evalFactor (Num n)     = n
+evalFactor (Bracket e) = 
+  case evalState (eval e []) [] of
+    NumVal n -> n
+    _        -> error "Expected NumVal in Bracket"
+
+
 
 -- evalExpr' (Expr t) env = evalTerm t env
 
