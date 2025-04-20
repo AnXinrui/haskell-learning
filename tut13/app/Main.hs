@@ -1,3 +1,6 @@
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE OverloadedStrings, ApplicativeDo #-}
+
 module Main (main) where
 
 import Data.Attoparsec.Text hiding (take)
@@ -17,6 +20,7 @@ instance Applicative Id where
   pure = Id 
 
 instance Monad Id where
+  (>>=) :: Id a -> (a -> Id b) -> Id b
   (Id x) >>= f = f x
 
 data State m a = St {runState :: (m -> (a, m))}
@@ -69,10 +73,84 @@ data Defn = Val Ident Expr
           | Rec Ident Expr
           deriving (Show, Eq)
 
+parseFun t = parseOnly parseExpr (T.pack t)
 
-parseExpr :: Parser Expr 
-parseExpr = undefined 
+parseExpr = parsePM <|> parseExpr'
 
+parseExpr' :: Parser Expr 
+parseExpr' = parseConst
+          <|> parseIf
+          <|> parseLet
+          <|> parseLam
+          <|> parseApp 
+          <|> parseVal
+
+
+ss = skipSpace
+
+atom = T.unpack <$> takeWhile1 (\c -> c /=' ' && c /= '"' && c /= '-' && c /= ':' )
+
+parseConst :: Parser Expr
+parseConst = Number <$> decimal 
+          <|> "True"  *> pure (Boolean True)
+          <|> "False" *> pure (Boolean False)
+
+parseIf :: Parser Expr
+parseIf = do 
+  "if" *> ss 
+  cond <- parseExpr <* ss 
+  "then" *> ss 
+  e1 <- parseExpr <* ss
+  "else" *> ss
+  e2 <- parseExpr <* ss
+  return (If cond e1 e2)
+
+parseVal = Var <$> atom
+
+parseLet = do 
+  "let" *> ss
+  d <- parseDefn <* ss 
+  "in" *> ss 
+  e <- parseExpr <* ss 
+  return $ Let d e 
+
+parseDefn = Val <$> ("val" *> ss *> atom <* ss <* char '=' <* ss) <*> parseExpr
+        <|> Rec <$> ("rec" *> ss *> atom <* ss <* char '=' <* ss) <*> parseExpr
+
+
+parseLam = do 
+  char '!'
+  atoms <- many1 (atom <* ss)
+  "->" *> ss 
+  exr <- parseExpr
+  return $ Lam atoms exr
+
+parsePM = parsePM' <|> parseTerm
+
+parsePM' = do 
+  t <- parseTerm <* ss
+  con <- (char '+' *> pure Plus
+      <|> char '-' *> pure Minus)
+  ss 
+  e <- parseExpr
+  return $ con t e 
+
+parseTerm = parseTerm' <|> parseFactor
+
+parseTerm' = do 
+  f <- parseFactor <* ss 
+  "==" *> ss
+  t <- parseTerm
+  return $ Equals f t
+
+parseFactor = char '(' *> parseExpr <* char ')'
+          <|> parseExpr'
+
+parseApp = do 
+  f <- "%{" *> parseExpr
+  char ':' *> ss 
+  ins <- many (parseExpr <* ss) 
+  return $ Apply f ins
 
 type Env = [(Ident, Value)]
 
@@ -140,6 +218,8 @@ elab _ _ = error "only lambdas can be recursive "
 
 
 env = []
+
+main :: IO()
 main = do 
   print "hello world"
 
