@@ -1,22 +1,25 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Eval (
   eval
 ) where 
 
 import Expr 
 import Control.Monad.State
+import Data.Functor.Identity
 
-
-eval :: Expr -> Env -> State [Mem] Value
+eval :: Expr -> Env -> State Mem Value
 eval (Number n)    _ = return $ NumVal n 
 eval (Boolean b)   _ = return $ BoolVal b 
 
-eval (TermExpr t)  _ = return $ NumVal $ evalTerm t
+-- eval (TermExpr t)  _ = return $ NumVal $ evalTerm t
 eval (Add e1 e2) env = do 
   v1 <- eval e1 env
   v2 <- eval e2 env
   case (v1, v2) of
     (NumVal n1, NumVal n2) -> return $ NumVal (n1 + n2)
     _ -> error "Type error in Add: expected NumVal"
+
 eval (Sub e1 e2) env = do 
   v1 <- eval e1 env
   v2 <- eval e2 env
@@ -24,30 +27,74 @@ eval (Sub e1 e2) env = do
     (NumVal n1, NumVal n2) -> return $ NumVal (n1 - n2)
     _ -> error "Type error in Add: expected NumVal"
 
-eval (Var v) _     = undefined
+eval (Mult e1 e2) env = do 
+  v1 <- eval e1 env
+  v2 <- eval e2 env
+  case (v1, v2) of
+    (NumVal n1, NumVal n2) -> return $ NumVal (n1 * n2)
+    _ -> error "Type error in Add: expected NumVal"
 
-evalTerm :: Term -> Int
-evalTerm (FactorTerm f) = evalFactor f
-evalTerm (Mult t1 t2)   = evalTerm t1 * evalTerm t2
-evalTerm (Div t1 t2)    = evalTerm t1 `div` evalTerm t2
-
-evalFactor :: Factor -> Int
-evalFactor (Num n)     = n
-evalFactor (Bracket e) = 
-  case evalState (eval e []) [] of
-    NumVal n -> n
-    _        -> error "Expected NumVal in Bracket"
+eval (Div e1 e2) env = do 
+  v1 <- eval e1 env
+  v2 <- eval e2 env
+  case (v1, v2) of
+    (NumVal n1, NumVal n2) -> return $ NumVal (n1 `div` n2)
+    _ -> error "Type error in Add: expected NumVal"
 
 
+eval (Var v)     env =do 
+  case find env v of 
+    Just val -> return val 
+    Nothing -> do 
+      mem <- get 
+      case find mem v of 
+        Just val -> return val 
+        Nothing  -> error $ "undefined variable: " ++ v
 
--- evalExpr' (Expr t) env = evalTerm t env
+eval (Equals e1 e2) env = BoolVal <$> ((==) <$> eval e1 env <*> eval e2 env)
+eval (Gt     e1 e2) env = BoolVal <$> ((>) <$> eval e1 env <*> eval e2 env)
+eval (Lt     e1 e2) env = BoolVal <$> ((<) <$> eval e1 env <*> eval e2 env)
 
--- eval (Expr'(Add e1 e2)) env = do 
---   ~(NumVal n1) <- eval e1 env 
---   ~(NumVal n2) <- eval e2 env 
---   return $ NumVal $ n1 + n2 
+eval (If g e1 e2) env = eval g env >>= \case
+  (BoolVal True)  -> eval e1 env
+  (BoolVal False) -> eval e2 env
+  _               -> error "Type error in If: expected Boolean"
 
--- eval (Expr' (Sub e1 e2)) env = do 
---   ~(NumVal n1) <- eval e1 env 
---   ~(NumVal n2) <- eval e2 env 
---   return $ NumVal $ n1 + n2 
+eval (Let d e) env = elab env d >>= eval e 
+
+eval (Lam ids e)  env = return $ Closure ids e env 
+eval (Apply f xs) env = do 
+  f' <- eval f env 
+  xs' <- mapM (`eval` env) xs
+  apply f' xs' 
+  
+
+-- evalTerm :: Term -> Int
+-- evalTerm (FactorTerm f) = evalFactor f
+-- evalTerm (Mult t1 t2)   = evalTerm t1 * evalTerm t2
+-- evalTerm (Div t1 t2)    = evalTerm t1 `div` evalTerm t2
+
+-- evalFactor :: Factor -> Int
+-- evalFactor (Num n)     = n
+-- evalFactor (Bracket e) = 
+--   case evalState (eval e []) [] of
+--     NumVal n -> n
+--     _        -> error "Expected NumVal in Bracket"
+
+
+find :: Env -> Ident -> Maybe Value
+find []  _ = Nothing
+find ((i', x):xs) i
+  | i' == i  = Just x
+  | otherwise = find xs i
+
+ 
+elab :: Env -> Defn -> StateT Mem Identity [(Ident, Value)]
+elab env (Val i e)           = eval e env >>= \r -> return $ (i, r) : env
+elab env (Rec i (Lam ids e)) = return env' 
+  where env' = (i, Closure ids e env') : env 
+elab _ _                     = error "only lambdas can be recursive!"
+
+apply :: Value -> [Value] -> State Mem Value
+apply (Closure ids e env) vals = eval e (zip ids vals ++ env)
+apply _ _                      = error "using a value as if it's a function"

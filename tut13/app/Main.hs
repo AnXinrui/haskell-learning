@@ -57,7 +57,7 @@ data Expr = Number Int
           | Var Ident
           | If Expr Expr Expr
           | Equals Expr Expr
-          | Let Defn Expr 
+          | Let  Expr 
           | Lam [Ident] Expr 
           | Apply Expr [Expr] -- fib 10 :: Apply (Lam ["n"] ...) [Number 10]
           | New
