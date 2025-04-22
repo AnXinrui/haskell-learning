@@ -17,7 +17,8 @@ main = do
   -- putStrLn "==================LETTEST================"
   -- letTest2 
   -- putStrLn "==================PARTEST================"
-  letParserTest
+  -- letParserTest
+  calcParserTest
 
 
 
@@ -36,15 +37,18 @@ letParserTest = do
   let s2 = "let rec fib = !x -> if x < 2 { x } else { %{fib:x-1} + %{fib:x-2} } in %{fib:5}"
   -- let s2 = "let rec fib = 2 in 3"
   -- let s2 = "let rec fib = !x -> if x < 2 { %{fib:3} } else { x } in 3"
-  -- let s2 = "{ %{fib:x-1} + %{fib:x-2} }"
   putStrLn s2
   print (parseFun s2)
-
-  -- let s2 = "%{fib:3 }"
-  -- let s2 = "if n < 2 { x } else { %{fib:x-1} + %{fib:x-2} } in %{fib:3}"
   case parseFun s2 of 
     Right e -> print $ runState (eval e []) []  -- 打印 (结果, 状态)
     _ -> putStrLn "解析失败"  
+
+  -- let s3 = "let rec fac = !x -> if x < 2 {1} else { %{fac:x-1} * x} in %{fac:1}"
+
+
+  -- let s2 = "%{fib:3 }"
+  -- let s2 = "if n < 2 { x } else { %{fib:x-1} + %{fib:x-2} } in %{fib:3}"
+
 
 -- ifParserTest :: IO ()
 -- ifParserTest = do 
@@ -116,15 +120,20 @@ letParserTest = do
 --   print m 
 
 
--- calcParserTest :: IO ()
--- calcParserTest = do 
---   print $ parseFun "123"
---   print $ parseFun "1 + 2"
---   print $ parseFun "1 > 2"
---   print $ parseFun "1 *  2"
---   print $ parseFun "1 < 3 * 4"
---   let s = "((1+ 3)  * (1 +3 * 3)) < ((2+ 3)  * (1 +3 * 3))"
---   print $ parseFun s
---   case parseFun s of
---     Right e -> print $ runState (eval e []) []  -- 打印 (结果, 状态)
---     _ -> putStrLn "解析失败"
+calcParserTest :: IO ()
+calcParserTest = do 
+  print $ parseFun "123"
+  print $ parseFun "1 + 2"
+  print $ parseFun "1 > 2"
+  print $ parseFun "1 *  2"
+  print $ parseFun "1 < 3 * 4"
+  let s = "((1+ 3)  * (1 +3 * 3)) < ((2+ 3)  * (1 +3 * 3))"
+  print $ parseFun s
+  case parseFun s of
+    Right e -> print $ runState (eval e []) []  -- 打印 (结果, 状态)
+    _ -> putStrLn "解析失败"
+  let s1 = "(1 + 3 * 4)+ (3 + 7)"
+  print $ parseFun s1
+  case parseFun s1 of
+    Right e -> print $ runState (eval e []) []  -- 打印 (结果, 状态)
+    _ -> putStrLn "解析失败"  

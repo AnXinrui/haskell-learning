@@ -64,18 +64,17 @@ parseLam = do
   Lam ids <$> parseExpr
 
 parseApp :: Parser Expr
--- parseApp = do 
---   func <- parseFactor <* ss
---   char '(' *> ss
---   args <- parseExpr `sepBy` (char ',' *> ss) <* char ')' <* ss
---   return $ Apply func args
-
 parseApp = do 
   f <- "%{" *> parseExpr
   char ':' *> ss 
   ins <- many (parseExpr <* ss) 
   char '}' *> ss
   return $ Apply f ins
+-- parseApp = do 
+--   func <- parseFactor <* ss
+--   char '(' *> ss
+--   args <- parseExpr `sepBy` (char ',' *> ss) <* char ')' <* ss
+--   return $ Apply func args
 
 parseComp :: Parser Expr
 parseComp = parseTerm `chainl1` addOp
