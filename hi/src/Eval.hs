@@ -67,19 +67,7 @@ eval (Apply f xs) env = do
   f' <- eval f env 
   xs' <- mapM (`eval` env) xs
   apply f' xs' 
-  
 
--- evalTerm :: Term -> Int
--- evalTerm (FactorTerm f) = evalFactor f
--- evalTerm (Mult t1 t2)   = evalTerm t1 * evalTerm t2
--- evalTerm (Div t1 t2)    = evalTerm t1 `div` evalTerm t2
-
--- evalFactor :: Factor -> Int
--- evalFactor (Num n)     = n
--- evalFactor (Bracket e) = 
---   case evalState (eval e []) [] of
---     NumVal n -> n
---     _        -> error "Expected NumVal in Bracket"
 
 
 find :: Env -> Ident -> Maybe Value

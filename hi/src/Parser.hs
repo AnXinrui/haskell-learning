@@ -17,17 +17,18 @@ parseExpr :: Parser Expr
 parseExpr = parseComp <|> parseConst
 
 
+
 parseComp :: Parser Expr
 parseComp = parseTerm `chainl1` addOp
   where
-    addOp = ss *> (char '+' *> pure Add)
-        <|> ss *> (char '-' *> pure Sub)
+    addOp = ss *> (char '+' $> Add)
+        <|> ss *> (char '-' $> Sub)
 
 parseTerm :: Parser Expr
 parseTerm = parseFactor `chainl1` mulOp
   where
-    mulOp = ss *> (char '*' *> pure Mult)
-        <|> ss *> (char '/' *> pure Div)
+    mulOp = ss *> (char '*' $> Mult)
+        <|> ss *> (char '/' $> Div)
 
 parseFactor :: Parser Expr
 parseFactor = ss *> char '(' *> parseComp <* char ')'

@@ -1,8 +1,6 @@
 module Expr (
   Expr(..),
   Value(..),
-  -- Term(..),
-  -- Factor(..),
   Ident,
   Defn(..),
   Env,
@@ -33,13 +31,7 @@ data Expr = Number Int
           -- | Assign Expr Expr
           deriving (Show, Eq, Ord)
 
--- 项
--- data Term = FactorTerm Factor | Mult Term Term | Div Term Term
---   deriving (Show, Eq, Ord)
 
--- -- 因子 (数字 或 (Expr))
--- data Factor = Bracket Expr | Num Int
---   deriving (Show, Eq, Ord)
         
 type Env = [(Ident, Value)]
 
