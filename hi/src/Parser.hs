@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings, ApplicativeDo #-}
 
 module Parser (
-  parseFun 
+  parseFun,
 ) where
 
 import Expr
@@ -14,9 +14,44 @@ parseFun :: String -> Either String Expr
 parseFun t = parseOnly parseExpr (T.pack t) 
 
 parseExpr :: Parser Expr
-parseExpr = parseComp <|> parseConst
+parseExpr = parseComp 
+        <|> parseConst
+        <|> parseIf
+        <|> parseSeq
+        <|> parseLet
+        <|> parseVal
 
+parseIf :: Parser Expr 
+parseIf = do 
+  "if" *> ss 
+  cond <- parseExpr <* ss 
+  e1 <- parseSeq <* ss
+  "else" *> ss
+  e2 <- parseSeq <* ss
+  return (If cond e1 e2)
 
+parseSeq :: Parser Expr 
+parseSeq = do 
+  char '{' *> ss 
+  exprs <- many' (parseExpr <* ss) 
+  char '}' *> ss
+  return $ Seq exprs
+
+parseVal :: Parser Expr
+parseVal = Var <$> atom
+
+parseLet :: Parser Expr
+parseLet = do 
+  "let" *> ss 
+  d <- parseDefn 
+  ss
+  "in"  *> ss 
+  e <- parseExpr <* ss 
+  return $ Let d e 
+
+parseDefn :: Parser Defn
+parseDefn = Val <$> ("val" *> ss *> atom <* ss <* char '=' <* ss) <*> parseExpr
+        <|> Rec <$> ("rec" *> ss *> atom <* ss <* char '=' <* ss) <*> parseExpr
 
 parseComp :: Parser Expr
 parseComp = parseTerm `chainl1` addOp
@@ -25,14 +60,27 @@ parseComp = parseTerm `chainl1` addOp
         <|> ss *> (char '-' $> Sub)
 
 parseTerm :: Parser Expr
-parseTerm = parseFactor `chainl1` mulOp
-  where
-    mulOp = ss *> (char '*' $> Mult)
-        <|> ss *> (char '/' $> Div)
+parseTerm = parseCompare 
+        <|> parseFactor `chainl1` mulOp
+              where
+                mulOp = ss *> (char '*' $> Mult)
+                    <|> ss *> (char '/' $> Div)
+
+parseCompare :: Parser Expr 
+parseCompare = do 
+  f <- parseFactor <* ss
+  op <- choice
+    [ "==" $> Equals
+    , "<"  $> Lt
+    , ">"  $> Gt
+    ]
+  ss
+  op f <$> parseTerm
 
 parseFactor :: Parser Expr
 parseFactor = ss *> char '(' *> parseComp <* char ')'
           <|> ss *> parseConst
+          <|> ss *> parseVal
 
 parseConst :: Parser Expr
 parseConst = Number <$> decimal 
@@ -49,3 +97,16 @@ chainl1 p op = p >>= rest
                  y <- p
                  rest (f x y))
              <|> pure x
+
+keyWords :: [T.Text]
+keyWords = ["let", "val", "in", "rec"]
+
+
+
+atom :: Parser String 
+atom = do
+  result <- T.unpack <$> takeWhile1 (\c -> c /= ' ' && c /= '"' && c /= '-' && c /= ':')
+  -- 如果解析结果在关键词列表中，则失败
+  if T.pack result `elem` keyWords
+     then fail $ "Keyword " ++ result ++ " is not allowed."
+     else return result

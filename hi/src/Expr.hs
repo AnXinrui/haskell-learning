@@ -12,7 +12,6 @@ type Ident = String
 
 data Expr = Number Int
           | Boolean Bool
-          -- | TermExpr Term
           | Add Expr Expr
           | Sub Expr Expr 
           | Mult Expr Expr
@@ -25,9 +24,9 @@ data Expr = Number Int
           | Let Defn Expr 
           | Lam [Ident] Expr 
           | Apply Expr [Expr]
+          | Seq [Expr]
           -- | New
           -- | Deref Expr 
-          -- | Seq Expr Expr
           -- | Assign Expr Expr
           deriving (Show, Eq, Ord)
 

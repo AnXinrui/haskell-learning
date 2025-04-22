@@ -1,27 +1,46 @@
 import Eval
-import Expr 
+-- -- import Expr 
+-- import qualified Data.Text as T
 import Parser
 import Control.Monad.State
+-- import Data.Attoparsec.Text hiding (take)
 
 main :: IO ()
 main = do
-  putStrLn "=================CALCTEST================"
-  -- calcTest
-  putStrLn "==================VARTEST================"
-  varTest
-  putStrLn "==================LETTEST================"
-  letTest1
-  putStrLn "==================LETTEST================"
-  letTest2 
-  print $ parseFun "123"
-  print $ parseFun "1 + 2"
-  print $ parseFun "1 / 2"
-  print $ parseFun "1 *  2"
-  print $ parseFun "1 + 3 * 4"
-  print $ parseFun "(1+ 3)  * (1 +3 * 3)"
-  case parseFun "(1+3) *(1+3*3)" of
+  letParserTest
+  -- putStrLn "=================CALCTEST================"
+  -- -- calcTest
+  -- putStrLn "==================VARTEST================"
+  -- varTest
+  -- putStrLn "==================LETTEST================"
+  -- letTest1
+  -- putStrLn "==================LETTEST================"
+  -- letTest2 
+
+
+
+letParserTest :: IO()
+letParserTest = do 
+  let s = "let val x = 665 in x + 1"
+  -- let s = "x + 1"
+  print $ parseFun s 
+  case parseFun s of
     Right e -> print $ runState (eval e []) []  -- 打印 (结果, 状态)
-    _ -> putStrLn "解析失败"
+    _ -> putStrLn "解析失败"  
+
+-- ifParserTest :: IO ()
+-- ifParserTest = do 
+--   let s = "if False { 1 + 1 } else {4 + 3}"
+--   print $ parseFun s 
+--   case parseFun s of
+--     Right e -> print $ runState (eval e []) []  -- 打印 (结果, 状态)
+--     _ -> putStrLn "解析失败"
+
+
+
+
+
+  
 -- stateTest = do
 --   let (a, b) = runState (eval (Number 3) []) [] 
 --   print a 
@@ -43,37 +62,51 @@ main = do
 --   print r 
 --   print m 
 
-ex1 :: Expr
-ex1 = Var "x"
-varTest :: IO ()
-varTest = do 
-  let (r0, m0) = runState (eval ex1 []) [("x", NumVal 8)]
-  print r0 
-  print m0
-  let (r1, m1) = runState (eval ex1 [("x", NumVal 3)]) []
-  print r1 
-  print m1
+-- ex1 :: Expr
+-- ex1 = Var "x"
+-- varTest :: IO ()
+-- varTest = do 
+--   let (r0, m0) = runState (eval ex1 []) [("x", NumVal 8)]
+--   print r0 
+--   print m0
+--   let (r1, m1) = runState (eval ex1 [("x", NumVal 3)]) []
+--   print r1 
+--   print m1
 
-ex2 :: Expr
-ex2 = Let (Val "x" (Number 7)) (Add (Var "x") (Number 1))
+-- ex2 :: Expr
+-- ex2 = Let (Val "x" (Number 7)) (Add (Var "x") (Number 1))
 
-letTest1 :: IO ()
-letTest1 = do 
-  let (r, m) = runState (eval ex2 []) []
-  print r 
-  print m 
+-- letTest1 :: IO ()
+-- letTest1 = do 
+--   let (r, m) = runState (eval ex2 []) []
+--   print r 
+--   print m 
 
-factorial :: Expr
-factorial = Lam ["i"] (If (Lt (Var "i") (Number 2)) (Number 1) (Mult (Var "i") 
-  (Apply (Var "fac") [Sub (Var "i") (Number 1)])))
+-- factorial :: Expr
+-- factorial = Lam ["i"] (If (Lt (Var "i") (Number 2)) (Number 1) (Mult (Var "i") 
+--   (Apply (Var "fac") [Sub (Var "i") (Number 1)])))
 
-ex3 :: Expr
-ex3 = Let (Rec "fac" factorial) (Apply (Var "fac") [Number 5])
--- ex3 = Let (Rec "fac" (Lam ["i"] (If (Lt (Var "i") (Number 2)) (Number 1) (Mult (Var "i") 
---   (Apply (Var "fac") [Number 1]))))) (Apply (Var "fac") [Number 4])
+-- ex3 :: Expr
+-- ex3 = Let (Rec "fac" factorial) (Apply (Var "fac") [Number 5])
+-- -- ex3 = Let (Rec "fac" (Lam ["i"] (If (Lt (Var "i") (Number 2)) (Number 1) (Mult (Var "i") 
+-- --   (Apply (Var "fac") [Number 1]))))) (Apply (Var "fac") [Number 4])
 
-letTest2 :: IO()
-letTest2 = do 
-  let (r, m) = runState (eval ex3 []) []
-  print r 
-  print m 
+-- letTest2 :: IO()
+-- letTest2 = do 
+--   let (r, m) = runState (eval ex3 []) []
+--   print r 
+--   print m 
+
+
+-- calcParserTest :: IO ()
+-- calcParserTest = do 
+--   print $ parseFun "123"
+--   print $ parseFun "1 + 2"
+--   print $ parseFun "1 > 2"
+--   print $ parseFun "1 *  2"
+--   print $ parseFun "1 < 3 * 4"
+--   let s = "((1+ 3)  * (1 +3 * 3)) < ((2+ 3)  * (1 +3 * 3))"
+--   print $ parseFun s
+--   case parseFun s of
+--     Right e -> print $ runState (eval e []) []  -- 打印 (结果, 状态)
+--     _ -> putStrLn "解析失败"

@@ -12,7 +12,6 @@ eval :: Expr -> Env -> State Mem Value
 eval (Number n)    _ = return $ NumVal n 
 eval (Boolean b)   _ = return $ BoolVal b 
 
--- eval (TermExpr t)  _ = return $ NumVal $ evalTerm t
 eval (Add e1 e2) env = do 
   v1 <- eval e1 env
   v2 <- eval e2 env
@@ -68,6 +67,11 @@ eval (Apply f xs) env = do
   xs' <- mapM (`eval` env) xs
   apply f' xs' 
 
+eval (Seq [e])      env =  eval e env 
+eval (Seq (e : es)) env = do 
+  _   <- eval e env 
+  eval (Seq es) env 
+eval (Seq [])         _ = return $ BoolVal False
 
 
 find :: Env -> Ident -> Maybe Value
