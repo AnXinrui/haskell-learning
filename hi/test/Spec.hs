@@ -1,5 +1,5 @@
 import Eval
--- -- import Expr 
+import Expr 
 -- import qualified Data.Text as T
 import Parser
 import Control.Monad.State
@@ -17,8 +17,19 @@ main = do
   -- putStrLn "==================LETTEST================"
   -- letTest2 
   -- putStrLn "==================PARTEST================"
-  -- letParserTest
+  letParserTest
   calcParserTest
+  let s = "set x 10"
+  print $ parseFun s 
+
+  let (r, m) = runState (eval (Set "x" (Number 10)) []) []
+  print r
+  print m 
+  let s1 = "x"
+  case parseFun s1 of
+    Right e -> print $ runState (eval e []) m  -- 打印 (结果, 状态)
+    _ -> putStrLn "解析失败"   
+
 
 
 

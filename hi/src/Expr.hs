@@ -20,11 +20,13 @@ data Expr = Number Int
           | Equals Expr Expr
           | Gt Expr Expr
           | Lt Expr Expr
+          | Set Ident Expr
           | If Expr Expr Expr
           | Let Defn Expr 
           | Lam [Ident] Expr 
           | Apply Expr [Expr]
           | Seq [Expr]
+          -- | Where Expr [Expr]
           -- | New
           -- | Deref Expr 
           -- | Assign Expr Expr

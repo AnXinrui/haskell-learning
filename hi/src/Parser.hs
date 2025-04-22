@@ -18,11 +18,18 @@ parseExpr = parseComp
         <|> parseConst
         <|> parseIf
         <|> parseSeq
+        <|> parseSet
         <|> parseLet
         <|> parseLam
         <|> parseApp
         <|> parseVal
        
+    
+parseSet :: Parser Expr
+parseSet = do 
+  "set" *> ss
+  arg <- atom <* ss
+  Set arg <$> parseExpr
 
 parseIf :: Parser Expr 
 parseIf = do 
@@ -123,7 +130,7 @@ chainl1 p op = p >>= rest
              <|> pure x
 
 keyWords :: [T.Text]
-keyWords = ["let", "in", "val", "rec", "if", "then", "else", "True", "False"]
+keyWords = ["set", "let", "in", "val", "rec", "if", "then", "else", "True", "False"]
 
 atom :: Parser String
 atom = do

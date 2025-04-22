@@ -36,7 +36,8 @@ library
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      attoparsec
+      ansi-terminal
+    , attoparsec
     , base >=4.7 && <5
     , bytestring
     , mtl
@@ -53,7 +54,8 @@ executable hi-exe
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      attoparsec
+      ansi-terminal
+    , attoparsec
     , base >=4.7 && <5
     , bytestring
     , hi
@@ -72,7 +74,8 @@ test-suite hi-test
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      attoparsec
+      ansi-terminal
+    , attoparsec
     , base >=4.7 && <5
     , bytestring
     , hi

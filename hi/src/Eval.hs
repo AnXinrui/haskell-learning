@@ -54,6 +54,12 @@ eval (Equals e1 e2) env = BoolVal <$> ((==) <$> eval e1 env <*> eval e2 env)
 eval (Gt     e1 e2) env = BoolVal <$> ((>) <$> eval e1 env <*> eval e2 env)
 eval (Lt     e1 e2) env = BoolVal <$> ((<) <$> eval e1 env <*> eval e2 env)
 
+eval (Set i e) env = do 
+  val <- eval e env
+  mem <- get
+  put $ (i, val) : mem  
+  return $ BoolVal True
+
 eval (If g e1 e2) env = eval g env >>= \case
   (BoolVal True)  -> eval e1 env
   (BoolVal False) -> eval e2 env

@@ -25,6 +25,7 @@ dependencies:
 - text
 - attoparsec
 - bytestring
+- ansi-terminal
 
 ghc-options:
 - -Wall
