@@ -19,7 +19,10 @@ parseExpr = parseComp
         <|> parseIf
         <|> parseSeq
         <|> parseLet
+        <|> parseLam
+        <|> parseApp
         <|> parseVal
+       
 
 parseIf :: Parser Expr 
 parseIf = do 
@@ -53,6 +56,27 @@ parseDefn :: Parser Defn
 parseDefn = Val <$> ("val" *> ss *> atom <* ss <* char '=' <* ss) <*> parseExpr
         <|> Rec <$> ("rec" *> ss *> atom <* ss <* char '=' <* ss) <*> parseExpr
 
+parseLam :: Parser Expr
+parseLam = do 
+  char '!' *> ss 
+  ids <- many1 (atom <* ss)
+  "->" *> ss
+  Lam ids <$> parseExpr
+
+parseApp :: Parser Expr
+-- parseApp = do 
+--   func <- parseFactor <* ss
+--   char '(' *> ss
+--   args <- parseExpr `sepBy` (char ',' *> ss) <* char ')' <* ss
+--   return $ Apply func args
+
+parseApp = do 
+  f <- "%{" *> parseExpr
+  char ':' *> ss 
+  ins <- many (parseExpr <* ss) 
+  char '}' *> ss
+  return $ Apply f ins
+
 parseComp :: Parser Expr
 parseComp = parseTerm `chainl1` addOp
   where
@@ -79,6 +103,7 @@ parseCompare = do
 
 parseFactor :: Parser Expr
 parseFactor = ss *> char '(' *> parseComp <* char ')'
+          <|> ss *> parseApp
           <|> ss *> parseConst
           <|> ss *> parseVal
 
@@ -99,13 +124,22 @@ chainl1 p op = p >>= rest
              <|> pure x
 
 keyWords :: [T.Text]
-keyWords = ["let", "val", "in", "rec"]
+keyWords = ["let", "in", "val", "rec", "if", "then", "else", "True", "False"]
 
-
-
-atom :: Parser String 
+atom :: Parser String
 atom = do
-  result <- T.unpack <$> takeWhile1 (\c -> c /= ' ' && c /= '"' && c /= '-' && c /= ':')
+  result <- T.unpack <$> takeWhile1 (\c -> c /= ' ' 
+                                        && c /= '"' 
+                                        && c /= '-' 
+                                        && c /= '+'
+                                        && c /= ':' 
+                                        && c /= '='
+                                        && c /= '('
+                                        && c /= ')'
+                                        && c /= '{'
+                                        && c /= '}'
+                                        && c /= '!'
+                                        && c /= '%')
   -- 如果解析结果在关键词列表中，则失败
   if T.pack result `elem` keyWords
      then fail $ "Keyword " ++ result ++ " is not allowed."

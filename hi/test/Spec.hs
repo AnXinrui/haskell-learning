@@ -7,7 +7,7 @@ import Control.Monad.State
 
 main :: IO ()
 main = do
-  letParserTest
+  
   -- putStrLn "=================CALCTEST================"
   -- -- calcTest
   -- putStrLn "==================VARTEST================"
@@ -16,15 +16,33 @@ main = do
   -- letTest1
   -- putStrLn "==================LETTEST================"
   -- letTest2 
+  -- putStrLn "==================PARTEST================"
+  letParserTest
+
 
 
 
 letParserTest :: IO()
 letParserTest = do 
-  let s = "let val x = 665 in x + 1"
-  -- let s = "x + 1"
-  print $ parseFun s 
-  case parseFun s of
+  -- let s1 = "let val x = 665 in x + 1"
+  -- -- let s = "x + 1"
+  -- print $ parseFun s1
+  -- case parseFun s1 of
+  --   Right e -> print $ runState (eval e []) []  -- 打印 (结果, 状态)
+  --   _ -> putStrLn "解析失败"  
+  -- print $ parseFun "\\s -> s + 1"
+  -- print $ parseFun "fib(3)"
+  
+  let s2 = "let rec fib = !x -> if x < 2 { x } else { %{fib:x-1} + %{fib:x-2} } in %{fib:5}"
+  -- let s2 = "let rec fib = 2 in 3"
+  -- let s2 = "let rec fib = !x -> if x < 2 { %{fib:3} } else { x } in 3"
+  -- let s2 = "{ %{fib:x-1} + %{fib:x-2} }"
+  putStrLn s2
+  print (parseFun s2)
+
+  -- let s2 = "%{fib:3 }"
+  -- let s2 = "if n < 2 { x } else { %{fib:x-1} + %{fib:x-2} } in %{fib:3}"
+  case parseFun s2 of 
     Right e -> print $ runState (eval e []) []  -- 打印 (结果, 状态)
     _ -> putStrLn "解析失败"  
 
