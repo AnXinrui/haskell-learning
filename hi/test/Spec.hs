@@ -2,7 +2,6 @@ import Eval
 import Expr 
 import Parser
 import Control.Monad.State
-import Data.Either (fromRight)
 
 main :: IO ()
 main = do
@@ -15,12 +14,12 @@ main = do
   putStrLn "==================LETTEST================"
   letTest2 
   print $ parseFun "123"
-  print $ parseFun "1+2"
-  print $ parseFun "1/2"
-  print $ parseFun "1*2"
-  print $ parseFun "1+3*4"
-  print $ parseFun "(1+3)*(1+3*3)"
-  case parseFun "(1+3)*(1+3*3)" of
+  print $ parseFun "1 + 2"
+  print $ parseFun "1 / 2"
+  print $ parseFun "1 *  2"
+  print $ parseFun "1 + 3 * 4"
+  print $ parseFun "(1+ 3)  * (1 +3 * 3)"
+  case parseFun "(1+3) *(1+3*3)" of
     Right e -> print $ runState (eval e []) []  -- 打印 (结果, 状态)
     _ -> putStrLn "解析失败"
 -- stateTest = do

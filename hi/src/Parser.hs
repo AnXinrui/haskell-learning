@@ -6,37 +6,42 @@ module Parser (
 
 import Expr
 import Data.Functor
+import qualified Data.Text as T
 import Control.Applicative
-import qualified Data.ByteString.Char8 as B
-import Data.Attoparsec.Internal.Types
-import Data.Attoparsec.ByteString.Char8 
+import Data.Attoparsec.Text hiding (take)
 
 parseFun :: String -> Either String Expr
-parseFun t = parseOnly parseExpr (B.pack t) 
+parseFun t = parseOnly parseExpr (T.pack t) 
 
+parseExpr :: Parser Expr
 parseExpr = parseComp <|> parseConst
 
+
+parseComp :: Parser Expr
 parseComp = parseTerm `chainl1` addOp
   where
     addOp = ss *> (char '+' *> pure Add)
         <|> ss *> (char '-' *> pure Sub)
 
+parseTerm :: Parser Expr
 parseTerm = parseFactor `chainl1` mulOp
   where
     mulOp = ss *> (char '*' *> pure Mult)
         <|> ss *> (char '/' *> pure Div)
 
+parseFactor :: Parser Expr
 parseFactor = ss *> char '(' *> parseComp <* char ')'
           <|> ss *> parseConst
 
-parseConst :: Data.Attoparsec.Internal.Types.Parser B.ByteString Expr
+parseConst :: Parser Expr
 parseConst = Number <$> decimal 
           <|> ("True"  $> Boolean True)
           <|> ("False" $> Boolean False)
 
-ss :: Data.Attoparsec.ByteString.Char8.Parser ()
+ss :: Parser ()
 ss = skipSpace
 
+chainl1 :: (Alternative m, Monad m) => m b -> m (b -> b -> b) -> m b
 chainl1 p op = p >>= rest
   where
     rest x = (do f <- op
